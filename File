@@ -1,0 +1,85 @@
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+
+local player = Players.LocalPlayer
+local camera = game.Workspace.CurrentCamera
+
+-- Create GUI elements
+local screenGui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
+local whiteFrame = Instance.new("Frame", screenGui)
+local redFrame = Instance.new("Frame", screenGui)
+local usernameBox = Instance.new("TextBox", redFrame)
+local camlockButton = Instance.new("TextButton", whiteFrame)
+
+-- Frame properties
+local frameWidth = 200
+local frameHeight = 50
+local screenHeight = screenGui.AbsoluteSize.Y
+
+whiteFrame.Size = UDim2.new(0, frameWidth, 0, frameHeight)
+whiteFrame.Position = UDim2.new(0.5, -frameWidth/2, 0, screenHeight * 0.05)
+whiteFrame.BackgroundColor3 = Color3.new(1, 1, 1)
+
+redFrame.Size = UDim2.new(0, frameWidth, 0, frameHeight)
+redFrame.Position = UDim2.new(0.5, -frameWidth/2, 0, screenHeight * 0.15)
+redFrame.BackgroundColor3 = Color3.new(1, 0, 0)
+
+-- TextBox properties
+usernameBox.Size = UDim2.new(1, 0, 1, 0)
+usernameBox.Text = "Enter Username"
+usernameBox.PlaceholderText = "Enter Username"
+usernameBox.TextColor3 = Color3.new(1, 1, 1)
+usernameBox.BackgroundColor3 = Color3.new(1, 0, 0)
+usernameBox.BorderSizePixel = 0
+
+-- Button properties
+camlockButton.Size = UDim2.new(1, 0, 1, 0)
+camlockButton.Text = "Camlock"
+camlockButton.TextColor3 = Color3.new(0, 0, 0)
+camlockButton.BackgroundColor3 = Color3.new(1, 1, 1)
+camlockButton.BorderSizePixel = 0
+
+-- Variables
+local targetPlayer = nil
+local camlockEnabled = false
+
+-- Function to find the target player
+local function findPlayerByUsername(username)
+    for _, p in pairs(Players:GetPlayers()) do
+        if p.Name:lower() == username:lower() then
+            return p
+        end
+    end
+    return nil
+end
+
+-- Function to enable/disable camlock
+local function toggleCamlock()
+    if not camlockEnabled then
+        local username = usernameBox.Text
+        targetPlayer = findPlayerByUsername(username)
+        if targetPlayer then
+            camlockEnabled = true
+            camlockButton.Text = "Unlock"
+        else
+            camlockButton.Text = "Player Not Found"
+        end
+    else
+        camlockEnabled = false
+        camlockButton.Text = "Camlock"
+        targetPlayer = nil
+    end
+end
+
+-- Button click event
+camlockButton.MouseButton1Click:Connect(toggleCamlock)
+
+-- RunService to update the camera lock
+RunService.RenderStepped:Connect(function()
+    if camlockEnabled and targetPlayer then
+        local targetHumanoidRootPart = targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart")
+        if targetHumanoidRootPart then
+            camera.CFrame = CFrame.new(camera.CFrame.Position, targetHumanoidRootPart.Position)
+        end
+    end
+end)
